@@ -1,7 +1,6 @@
-package entity
+package dto
 
-type User struct {
-	ID         uint
+type UserCreate struct {
 	Login      string
 	Password   string
 	Permission uint

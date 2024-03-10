@@ -13,6 +13,10 @@ type auth struct {
 	AuthStorage storage.Auth
 }
 
+func (a *auth) Migrate(ctx context.Context) {
+
+}
+
 func (a *auth) Login(ctx context.Context) {
 
 }
