@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"errors"
 	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
@@ -10,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type AuthRepository storage.Auth
+type AuthRepository storage.User
 
 type authRepository struct {
 	db  *gorm.DB
@@ -48,6 +49,9 @@ func (aR *authRepository) Find(user *scheme.User) (*entity.User, error) {
 	logF := advancedlog.FunctionLog(aR.log)
 	result := aR.db.First(user)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		logF.Errorln(result.Error)
 		return nil, result.Error
 	}
@@ -58,4 +62,15 @@ func (aR *authRepository) Find(user *scheme.User) (*entity.User, error) {
 		Password:   user.Password,
 		Permission: user.Permission,
 	}, nil
+}
+
+func (aR *authRepository) DeleteByID(id uint) error {
+	logF := advancedlog.FunctionLog(aR.log)
+	result := aR.db.Delete(&scheme.User{ID: id})
+	if result.Error != nil {
+		logF.Errorln(result.Error)
+		return result.Error
+	}
+
+	return nil
 }

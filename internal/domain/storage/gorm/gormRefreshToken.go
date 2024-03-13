@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"errors"
 	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
@@ -56,6 +57,9 @@ func (rR *refreshTokenRepository) Find(refreshToken *scheme.RefreshToken) (*enti
 
 	result := rR.db.First(refreshToken)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		logF.Errorln(result.Error)
 		return nil, result.Error
 	}
@@ -67,4 +71,28 @@ func (rR *refreshTokenRepository) Find(refreshToken *scheme.RefreshToken) (*enti
 		ExpirationTimeUnix: refreshToken.ExpirationTimeUnix,
 		CreateTimeUnix:     refreshToken.CreateTimeUnix,
 	}, nil
+}
+
+func (rR *refreshTokenRepository) DeleteByLogin(login string) error {
+	logF := advancedlog.FunctionLog(rR.log)
+
+	result := rR.db.Delete(&scheme.RefreshToken{Login: login})
+	if result.Error != nil {
+		logF.Errorln(result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
+func (rR *refreshTokenRepository) DeleteByID(id uint) error {
+	logF := advancedlog.FunctionLog(rR.log)
+
+	result := rR.db.Delete(&scheme.RefreshToken{ID: id})
+	if result.Error != nil {
+		logF.Errorln(result.Error)
+		return result.Error
+	}
+
+	return nil
 }

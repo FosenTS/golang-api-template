@@ -4,6 +4,6 @@ type RefreshToken struct {
 	ID                 uint
 	Token              string
 	Login              string
-	ExpirationTimeUnix int
-	CreateTimeUnix     int
+	ExpirationTimeUnix int64
+	CreateTimeUnix     int64
 }
