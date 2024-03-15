@@ -1,8 +1,9 @@
 package advancedlog
 
 import (
-	"github.com/sirupsen/logrus"
 	"runtime"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (

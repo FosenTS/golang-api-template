@@ -3,9 +3,10 @@ package ajwt
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"time"
 )
 
 type RefreshTokenClaims struct {

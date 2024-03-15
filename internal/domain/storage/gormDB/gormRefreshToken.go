@@ -1,13 +1,14 @@
-package gorm
+package gormDB
 
 import (
 	"errors"
-	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
 	"golang-api-template/internal/domain/storage/gorm/scheme"
 	"golang-api-template/pkg/advancedlog"
+
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 

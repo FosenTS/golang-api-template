@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
@@ -12,11 +11,13 @@ import (
 	"golang-api-template/pkg/advancedlog"
 	"golang-api-template/pkg/ajwt"
 	"golang-api-template/pkg/passlib"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Auth interface {
 	Register(ctx context.Context, register *dto.UserCreate) error
-	Login(ctx context.Context, login *dto.Login) (*safeobject.User, *safeobject.PairToken, error)
+	Login(ctx context.Context, login *dto.Login) (*safeobject.PairToken, error)
 }
 
 var ErrNotFound = errors.New("not found user")
@@ -47,13 +48,19 @@ func (a *auth) createUserRefreshToken(ctx context.Context, login string) (*entit
 	rTC := dto.NewRefreshTokenCreate(token, login, createTime, expireTime)
 	rT, err := a.refreshTokenStorage.InsertRefreshToken(rTC)
 	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
+
+	err.Error()
+	if err != nil {
 		return nil, err
 	}
 
 	return rT, nil
 }
 
-func (a *auth) Login(ctx context.Context, login *dto.Login) (*safeobject.User, *safeobject.PairToken, error) {
+func (a *auth) Login(ctx context.Context, login *dto.Login) (*safeobject.PairToken, error) {
 	logF := advancedlog.FunctionLog(a.log)
 
 	user, err := a.userStorage.Find(&scheme.User{
@@ -63,31 +70,29 @@ func (a *auth) Login(ctx context.Context, login *dto.Login) (*safeobject.User, *
 	err = a.hashManager.Compare(user.Password, login.Password)
 	if err != nil {
 		logF.Errorln(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	accessT, err := a.jwtManager.NewUser(user.Login)
 	if err != nil {
 		logF.Errorln(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	refreshT, err := a.createUserRefreshToken(ctx, user.Login)
 	if err != nil {
 		logF.Errorln(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	if err != nil {
 		logF.Errorln(err)
-		return nil, nil, err
+		return nil, err
 	}
 
-	pair := safeobject.NewPairToken(accessT, refreshT)
+	pair := safeobject.NewPairToken(accessT, refreshT.Token)
 
-	userSafe := safeobject.NewUser(user.Login, user.Permission)
-
-	return userSafe, pair, nil
+	return pair, nil
 }
 
 func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken, error) {
@@ -123,7 +128,7 @@ func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken
 		return nil, err
 	}
 
-	return safeobject.NewPairToken(accessToken, refreshToken), nil
+	return safeobject.NewPairToken(accessToken, refreshToken.Token), nil
 }
 
 func (a *auth) Register(ctx context.Context, register *dto.UserCreate) error {

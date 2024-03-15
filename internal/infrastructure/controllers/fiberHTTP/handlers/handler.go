@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/service"
+
+	"github.com/sirupsen/logrus"
 )
 
 type HandlerFiber struct {

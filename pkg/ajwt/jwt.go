@@ -3,8 +3,9 @@ package ajwt
 import (
 	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type Hasher interface {

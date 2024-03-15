@@ -1,24 +1,25 @@
-package gorm
+package gormDB
 
 import (
 	"errors"
-	"github.com/sirupsen/logrus"
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
-	"golang-api-template/internal/domain/storage/gorm/scheme"
+	"golang-api-template/internal/domain/storage/gormDB/scheme"
 	"golang-api-template/pkg/advancedlog"
+
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
-type AuthRepository storage.User
+type UserRepository storage.User
 
-type authRepository struct {
+type userRepository struct {
 	db  *gorm.DB
 	log *logrus.Entry
 }
 
-func NewAuthRepository(db *gorm.DB, log *logrus.Entry) (AuthRepository, error) {
+func NewUserRepository(db *gorm.DB, log *logrus.Entry) (UserRepository, error) {
 	logF := advancedlog.FunctionLog(log)
 
 	err := db.AutoMigrate(&scheme.User{})
@@ -31,10 +32,10 @@ func NewAuthRepository(db *gorm.DB, log *logrus.Entry) (AuthRepository, error) {
 		logF.Errorln(err)
 		return nil, err
 	}
-	return &authRepository{db: db, log: log}, nil
+	return &userRepository{db: db, log: log}, nil
 }
 
-func (aR *authRepository) InsertUser(user *dto.UserCreate) error {
+func (aR *userRepository) InsertUser(user *dto.UserCreate) error {
 	logF := advancedlog.FunctionLog(aR.log)
 	result := aR.db.Create(&scheme.User{Login: user.Login, Password: user.Password, Permission: user.Permission})
 	if result.Error != nil {
@@ -45,7 +46,7 @@ func (aR *authRepository) InsertUser(user *dto.UserCreate) error {
 	return nil
 }
 
-func (aR *authRepository) Find(user *scheme.User) (*entity.User, error) {
+func (aR *userRepository) Find(user *scheme.User) (*entity.User, error) {
 	logF := advancedlog.FunctionLog(aR.log)
 	result := aR.db.First(user)
 	if result.Error != nil {
@@ -64,7 +65,7 @@ func (aR *authRepository) Find(user *scheme.User) (*entity.User, error) {
 	}, nil
 }
 
-func (aR *authRepository) DeleteByID(id uint) error {
+func (aR *userRepository) DeleteByID(id uint) error {
 	logF := advancedlog.FunctionLog(aR.log)
 	result := aR.db.Delete(&scheme.User{ID: id})
 	if result.Error != nil {

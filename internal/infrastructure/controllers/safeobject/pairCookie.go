@@ -1,12 +1,10 @@
 package safeobject
 
-import "golang-api-template/internal/domain/entity"
-
 type PairToken struct {
 	Access  string
-	Refresh *entity.RefreshToken
+	Refresh string
 }
 
-func NewPairToken(access string, refresh *entity.RefreshToken) *PairToken {
+func NewPairToken(access string, refresh string) *PairToken {
 	return &PairToken{Access: access, Refresh: refresh}
 }

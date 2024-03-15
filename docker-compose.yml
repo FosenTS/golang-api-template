@@ -5,7 +5,7 @@ services:
     image: backend-api
     build:
       context: ./
-      dockerfile: Dockerfile-deploy
+      dockerfile: deploy.dockerfile
     ports:
       - "17771:7771"
       - "17779:7779"
