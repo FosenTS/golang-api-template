@@ -1,21 +1,12 @@
 version: "3"
 
 services:
-  backend-api:
-    image: backend-api
-    build:
-      context: ./
-      dockerfile: deploy.dockerfile
-    ports:
-      - "17771:7771"
-      - "17779:7779"
-
   postgres-db:
     image: postgres:16.2
     environment:
       POSTGRES_PASSWORD: test1234
     ports:
-      - "16432:6432"
+      - "15432:5432"
 
   prometheus:
     image: prom/prometheus:latest
@@ -30,6 +21,15 @@ services:
       - "13000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+
+  backend-api:
+    image: backend-api
+    build:
+      context: ./
+      dockerfile: deploy.dockerfile
+    ports:
+      - "17771:7771"
+      - "17779:7779"
 
 volumes:
   grafana-data:

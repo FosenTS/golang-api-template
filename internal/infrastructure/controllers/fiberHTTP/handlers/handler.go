@@ -12,6 +12,9 @@ type HandlerFiber struct {
 	log *logrus.Entry
 }
 
-func NewHandlerFiber() *HandlerFiber {
-	return &HandlerFiber{}
+func NewHandlerFiber(authService *service.Auth, log *logrus.Entry) *HandlerFiber {
+	return &HandlerFiber{
+		AuthService: *authService,
+		log:         log.WithField("location", "handler-fiber"),
+	}
 }

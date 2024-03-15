@@ -24,10 +24,10 @@ RUN apk add --no-cache tzdata
 WORKDIR /app
 
 COPY /external ./external
-COPY .env.local .
+COPY .env.deploy .
 COPY --from=build /app .
 
 # Config
 ENV PROJECT_ABS_PATH "/app"
 
-ENTRYPOINT ["./application"]
+ENTRYPOINT ["./application", "-mode=deploy"]

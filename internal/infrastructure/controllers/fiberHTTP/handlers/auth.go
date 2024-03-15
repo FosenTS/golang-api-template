@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func (h *HandlerFiber) RegisterGroup(g *fiber.Group) {
+func (h *HandlerFiber) RegisterGroup(g fiber.Router) {
 	g.Post("/login", h.Login)
 	g.Post("/register", h.Register)
 }

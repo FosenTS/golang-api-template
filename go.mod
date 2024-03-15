@@ -3,13 +3,15 @@ module golang-api-template
 go 1.22.0
 
 require (
-	github.com/gofiber/fiber/v3 v3.0.0-20240308190313-0379cc59aad0
+	github.com/alitto/pond v1.8.3
+	github.com/gofiber/fiber/v3 v3.0.0-20240313181542-df1f877cc0be
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/sirupsen/logrus v1.9.3
+	github.com/weaveworks/promrus v1.2.0
 	golang.org/x/crypto v0.21.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.7
@@ -30,13 +32,14 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	github.com/weaveworks/promrus v1.2.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect

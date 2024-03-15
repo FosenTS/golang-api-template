@@ -6,7 +6,7 @@ import (
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
-	"golang-api-template/internal/domain/storage/gorm/scheme"
+	"golang-api-template/internal/domain/storage/gormDB/scheme"
 	"golang-api-template/internal/infrastructure/controllers/safeobject"
 	"golang-api-template/pkg/advancedlog"
 	"golang-api-template/pkg/ajwt"
@@ -30,6 +30,17 @@ type auth struct {
 	jwtManager  ajwt.JWTManager
 
 	log *logrus.Entry
+}
+
+func NewAuth(userStorage storage.User, refreshTokenStorage storage.RefreshToken, hashManaher passlib.HashManager, jwtManager ajwt.JWTManager, log *logrus.Entry) Auth {
+
+	return &auth{
+		userStorage:         userStorage,
+		refreshTokenStorage: refreshTokenStorage,
+		hashManager:         hashManaher,
+		jwtManager:          jwtManager,
+		log:                 log,
+	}
 }
 
 func (a *auth) createUserRefreshToken(ctx context.Context, login string) (*entity.RefreshToken, error) {

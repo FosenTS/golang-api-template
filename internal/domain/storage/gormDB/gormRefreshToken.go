@@ -5,7 +5,7 @@ import (
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
-	"golang-api-template/internal/domain/storage/gorm/scheme"
+	"golang-api-template/internal/domain/storage/gormDB/scheme"
 	"golang-api-template/pkg/advancedlog"
 
 	"github.com/sirupsen/logrus"

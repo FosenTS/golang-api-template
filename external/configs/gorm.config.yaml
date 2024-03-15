@@ -1,0 +1,12 @@
+skipDefaultTransaction:
+fullSaveAssociations:
+dryRun:
+prepareStmt:
+disableAutomaticPing:
+disableForeignKeyConstraintWhenMigrating:
+ignoreRelationshipsWhenMigrating:
+disableNestedTransaction:
+allowGlobalUpdate:
+queryFields:
+createBatchSize:
+translateError:

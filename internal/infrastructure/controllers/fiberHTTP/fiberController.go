@@ -14,6 +14,11 @@ type fiberController struct {
 	handlers *handlers.HandlerFiber
 }
 
-func (fC *fiberController) RegisterRoutes(g *fiber.Group) {
-	fC.handlers.RegisterGroup(g)
+func NewFiberController(handlers *handlers.HandlerFiber) FiberController {
+	return &fiberController{handlers: handlers}
+}
+
+func (fC *fiberController) RegisterRoutes(r *fiber.App) {
+	api := r.Group("/api")
+	fC.handlers.RegisterGroup(api)
 }

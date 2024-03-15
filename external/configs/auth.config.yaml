@@ -1,0 +1,2 @@
+jwtLiveTimeSeconds: 1800
+refreshLiveTimeSeconds: 259200

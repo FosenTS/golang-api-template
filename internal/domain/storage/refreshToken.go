@@ -3,7 +3,7 @@ package storage
 import (
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage/dto"
-	"golang-api-template/internal/domain/storage/gorm/scheme"
+	"golang-api-template/internal/domain/storage/gormDB/scheme"
 )
 
 type RefreshToken interface {

@@ -1,10 +1,11 @@
 package config
 
 import (
-	log "github.com/sirupsen/logrus"
 	"golang-api-template/pkg/gconfig"
 	"golang-api-template/pkg/mysync"
 	"path"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -40,7 +41,7 @@ type EnvConfig struct {
 
 var (
 	envCfgInst  = &EnvConfig{}
-	loadEnvOnce = mysync.Once{}
+	loadEnvOnce = mysync.NewOnce()
 )
 
 func LoadEnv(mode string) {
