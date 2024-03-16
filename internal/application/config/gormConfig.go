@@ -1,7 +1,7 @@
 package config
 
 import (
-	"sync"
+	"golang-api-template/pkg/mysync"
 )
 
 const gormConfigFilename = "gorm.config.yaml"
@@ -47,10 +47,10 @@ type GormConfig struct {
 
 var (
 	gormConfigInst     = &GormConfig{}
-	loadGormConfigOnce = sync.Once{}
+	loadGormConfigOnce = mysync.NewOnce()
 )
 
-func Gorm() *GormConfig {
+func Gorm() GormConfig {
 	loadGormConfigOnce.Do(func() {
 		env := Env()
 		gormConfigInst.Host = env.PostgresHost
@@ -64,5 +64,5 @@ func Gorm() *GormConfig {
 
 	})
 
-	return gormConfigInst
+	return *gormConfigInst
 }

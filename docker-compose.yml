@@ -3,10 +3,24 @@ version: "3"
 services:
   postgres-db:
     image: postgres:16.2
+    restart: always
     environment:
       POSTGRES_PASSWORD: test1234
+    volumes:
+      - db_data:/var/lib/postgresql/data
     ports:
       - "15432:5432"
+
+  backend-api:
+    image: backend-api
+    depends_on:
+      - postgres-db
+    build:
+      context: ./
+      dockerfile: deploy.Dockerfile
+    ports:
+      - "17771:7771"
+      - "17779:7779"
 
   prometheus:
     image: prom/prometheus:latest
@@ -22,14 +36,6 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
 
-  backend-api:
-    image: backend-api
-    build:
-      context: ./
-      dockerfile: deploy.dockerfile
-    ports:
-      - "17771:7771"
-      - "17779:7779"
-
 volumes:
   grafana-data:
+  db_data:

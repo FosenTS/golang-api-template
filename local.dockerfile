@@ -27,7 +27,12 @@ COPY /external ./external
 COPY .env.local .
 COPY --from=build /app .
 
+
+EXPOSE 7771
+EXPOSE 7779
+
 # Config
 ENV PROJECT_ABS_PATH "/app"
+
 
 ENTRYPOINT ["./application"]

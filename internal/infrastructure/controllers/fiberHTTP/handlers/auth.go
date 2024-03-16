@@ -6,7 +6,7 @@ import (
 	"golang-api-template/internal/domain/storage/dto"
 	"golang-api-template/pkg/advancedlog"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 func (h *HandlerFiber) RegisterGroup(g fiber.Router) {
@@ -14,7 +14,7 @@ func (h *HandlerFiber) RegisterGroup(g fiber.Router) {
 	g.Post("/register", h.Register)
 }
 
-func (h *HandlerFiber) Login(c fiber.Ctx) error {
+func (h *HandlerFiber) Login(c *fiber.Ctx) error {
 	logF := advancedlog.FunctionLog(h.log)
 	body := c.Body()
 	var login *dto.Login
@@ -41,7 +41,7 @@ func (h *HandlerFiber) Login(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).Send(response)
 }
 
-func (h *HandlerFiber) Register(c fiber.Ctx) error {
+func (h *HandlerFiber) Register(c *fiber.Ctx) error {
 	logF := advancedlog.FunctionLog(h.log)
 	body := c.Body()
 	var register *dto.UserCreate

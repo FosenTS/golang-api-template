@@ -6,7 +6,7 @@ import (
 	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/handlers"
 	"golang-api-template/internal/infrastructure/controllers/metrics"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,19 +18,16 @@ type Controller struct {
 func NewController(gateway *Gateway, metricsConfig config.MetricsConfig, log *logrus.Entry) *Controller {
 	return &Controller{
 		fiberController: fiberHTTP.NewFiberController(handlers.NewHandlerFiber(&gateway.Services.Auth, log.WithField("location", "handler-fiber"))),
-		metrics:         metrics.NewMetrics(metricsConfig),
+		metrics:         metrics.NewMetrics(metricsConfig, log.WithField("location", "metrics-listener")),
 	}
 }
 
-func (c *Controller) ConfigureFiber(r *fiber.App) {
+func (c *Controller) ConfigureFiber(r *fiber.App) error {
 	c.fiberController.RegisterRoutes(r)
+
+	return nil
 }
 
 func (c *Controller) ListenMetrics() error {
-	err := c.metrics.Listen()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.metrics.Listen()
 }

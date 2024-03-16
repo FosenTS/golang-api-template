@@ -1,7 +1,7 @@
 package dto
 
 type UserCreate struct {
-	Login      string
-	Password   string
-	Permission uint
+	Login      string `json:"login" binding:"true"`
+	Password   string `json:"password" binding:"true"`
+	Permission uint   `json:"permission" binding:"true"`
 }

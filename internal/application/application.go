@@ -8,8 +8,8 @@ import (
 	"golang-api-template/pkg/advancedlog"
 
 	"github.com/alitto/pond"
-	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cache"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/weaveworks/promrus"
 
 	"github.com/sirupsen/logrus"
@@ -19,6 +19,8 @@ import (
 
 type App interface {
 	Run(ctx context.Context) error
+	runHTTP(ctx context.Context) error
+	runMetricsListen(ctx context.Context) error
 }
 
 type app struct {
@@ -68,42 +70,25 @@ func NewApp(ctx context.Context) (App, error) {
 }
 
 func (app *app) Run(ctx context.Context) error {
-	pool := pond.New(5, 5)
-	defer pool.StopAndWait()
+	pond := pond.New(2, 2)
 
-	group, grpCtx := pool.GroupContext(ctx)
-	group.Submit(func() error {
-		err := app.runHTTP(grpCtx)
-		if err != nil {
-			app.log.Fatalln(err)
-			return err
-		}
-		return nil
+	grp, grpCtx := pond.GroupContext(ctx)
+
+	grp.Submit(func() error {
+		return app.runHTTP(grpCtx)
+
 	})
-	group.Submit(func() error {
-		err := app.endpoint.ListenMetrics()
-		if err != nil {
-			app.log.Fatalln(err)
-			return err
-		}
-		return nil
+	grp.Submit(func() error {
+		return app.runMetricsListen(grpCtx)
+
 	})
 
-	err := group.Wait()
-	if err != nil {
-		app.log.Fatalln(err)
-		return err
-	}
+	return grp.Wait()
 
-	return nil
 }
 
 func (app *app) runMetricsListen(ctx context.Context) error {
-	err := app.endpoint.ListenMetrics()
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.endpoint.ListenMetrics()
 }
 
 func (app *app) runHTTP(ctx context.Context) error {
@@ -117,14 +102,27 @@ func (app *app) runHTTP(ctx context.Context) error {
 
 	app.endpoint.ConfigureFiber(fApp)
 
-	addr := fmt.Sprintf("%s:%s", app.httpCfg.Host, app.httpCfg.Port)
-	fApp.Listen(addr)
+	fApp.Get("/test", func(c *fiber.Ctx) error {
+		return c.SendString("test")
+	})
 
-	return nil
+	addr := fmt.Sprintf("%s:%s", app.httpCfg.Host, app.httpCfg.Port)
+
+	for {
+		err := fApp.Listen(addr)
+		if err != nil {
+			app.log.Errorf("error runnig http server: %s", err)
+		} else {
+			app.log.Warnln("warn runnig http server: it stopped without error")
+		}
+	}
+
 }
 
 func createLogrus(config *config.AppConfig) (*logrus.Logger, error) {
-	logger := logrus.New()
+
+	advancedlog.ConfigureLogrus()
+	logger := advancedlog.GetLogger()
 
 	level := logger.GetLevel()
 	switch config.LogLevel {
@@ -151,26 +149,26 @@ func createLogrus(config *config.AppConfig) (*logrus.Logger, error) {
 
 }
 
-func createGormConnection(config *config.GormConfig, log *logrus.Entry) (*gorm.DB, error) {
+func createGormConnection(config config.GormConfig, log *logrus.Entry) (*gorm.DB, error) {
 	logF := advancedlog.FunctionLog(log)
 	sslmode := "disable"
 	if config.UseCA {
 		sslmode = "enable"
 	}
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", config.Host, config.Username, config.Password, config.DatabaseName, config.Port, sslmode, config.TimeZone)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", config.Host, config.Username, config.Password, config.DatabaseName, config.Port, sslmode)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		SkipDefaultTransaction:                   config.SkipDefaultTransaction,
-		FullSaveAssociations:                     config.FullSaveAssociations,
-		DryRun:                                   config.DryRun,
-		PrepareStmt:                              config.PrepareStmt,
+		SkipDefaultTransaction: config.SkipDefaultTransaction,
+		// FullSaveAssociations:                     config.FullSaveAssociations,
+		DryRun: config.DryRun,
+		// PrepareStmt:                              config.PrepareStmt,
 		DisableAutomaticPing:                     config.DisableAutomaticPing,
 		DisableForeignKeyConstraintWhenMigrating: config.DisableForeignKeyConstraintWhenMigrating,
-		IgnoreRelationshipsWhenMigrating:         config.IgnoreRelationshipsWhenMigrating,
-		DisableNestedTransaction:                 config.DisableNestedTransaction,
-		AllowGlobalUpdate:                        config.AllowGlobalUpdate,
-		QueryFields:                              config.QueryFields,
-		CreateBatchSize:                          config.CreateBatchSize,
-		TranslateError:                           config.TranslateError,
+		// IgnoreRelationshipsWhenMigrating:         config.IgnoreRelationshipsWhenMigrating,
+		DisableNestedTransaction: config.DisableNestedTransaction,
+		AllowGlobalUpdate:        config.AllowGlobalUpdate,
+		// QueryFields:                              config.QueryFields,
+		// CreateBatchSize:                          config.CreateBatchSize,
+		// TranslateError:                           config.TranslateError,
 	})
 	if err != nil {
 		logF.Fatalln(err)
