@@ -6,7 +6,6 @@ import (
 	"golang-api-template/internal/domain/entity"
 	"golang-api-template/internal/domain/storage"
 	"golang-api-template/internal/domain/storage/dto"
-	"golang-api-template/internal/domain/storage/gormDB/scheme"
 	"golang-api-template/internal/infrastructure/controllers/safeobject"
 	"golang-api-template/pkg/advancedlog"
 	"golang-api-template/pkg/ajwt"
@@ -63,7 +62,6 @@ func (a *auth) createUserRefreshToken(ctx context.Context, login string) (*entit
 		return nil, err
 	}
 
-	err.Error()
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +72,11 @@ func (a *auth) createUserRefreshToken(ctx context.Context, login string) (*entit
 func (a *auth) Login(ctx context.Context, login *dto.Login) (*safeobject.PairToken, error) {
 	logF := advancedlog.FunctionLog(a.log)
 
-	user, err := a.userStorage.Find(&scheme.User{
-		Login: login.Login,
-	})
+	user, err := a.userStorage.FindByLogin(login.Login)
+	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
 
 	err = a.hashManager.Compare(user.Password, login.Password)
 	if err != nil {
@@ -111,7 +111,7 @@ func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken
 	if err != nil {
 		return nil, err
 	}
-	rt, err := a.refreshTokenStorage.Find(&scheme.RefreshToken{Token: token})
+	rt, err := a.refreshTokenStorage.FindByToken(token)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken
 		return nil, err
 	}
 
-	user, err := a.userStorage.Find(&scheme.User{Login: rt.Login})
+	user, err := a.userStorage.FindByLogin(rt.Login)
 
 	if user == nil {
 		return nil, ErrNotFound
@@ -144,7 +144,14 @@ func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken
 
 func (a *auth) Register(ctx context.Context, register *dto.UserCreate) error {
 	logF := advancedlog.FunctionLog(a.log)
-	err := a.userStorage.InsertUser(register)
+
+	pass, err := a.hashManager.Hash(register.Password)
+	if err != nil {
+		logF.Errorln(err)
+		return err
+	}
+
+	err = a.userStorage.InsertUser(dto.NewUserCreate(register.Login, pass, register.Permission))
 	if err != nil {
 		logF.Errorln(err)
 		return err

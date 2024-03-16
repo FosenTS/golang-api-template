@@ -37,7 +37,7 @@ func NewUserRepository(db *gorm.DB, log *logrus.Entry) (UserRepository, error) {
 
 func (aR *userRepository) InsertUser(user *dto.UserCreate) error {
 	logF := advancedlog.FunctionLog(aR.log)
-	result := aR.db.Create(&scheme.User{Login: user.Login, Password: user.Password, Permission: user.Permission})
+	result := aR.db.Create(&scheme.User{Login: user.Login, Password: user.Password, Permission: uint(user.Permission)})
 	if result.Error != nil {
 		logF.Errorln(result.Error)
 		return result.Error
@@ -46,9 +46,10 @@ func (aR *userRepository) InsertUser(user *dto.UserCreate) error {
 	return nil
 }
 
-func (aR *userRepository) Find(user *scheme.User) (*entity.User, error) {
+func (aR *userRepository) FindByLogin(login string) (*entity.User, error) {
 	logF := advancedlog.FunctionLog(aR.log)
-	result := aR.db.First(user)
+	var user *scheme.User
+	result := aR.db.Where("login = ?", login).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -67,7 +68,8 @@ func (aR *userRepository) Find(user *scheme.User) (*entity.User, error) {
 
 func (aR *userRepository) DeleteByID(id uint) error {
 	logF := advancedlog.FunctionLog(aR.log)
-	result := aR.db.Delete(&scheme.User{ID: id})
+
+	result := aR.db.Delete(&scheme.User{}, id)
 	if result.Error != nil {
 		logF.Errorln(result.Error)
 		return result.Error

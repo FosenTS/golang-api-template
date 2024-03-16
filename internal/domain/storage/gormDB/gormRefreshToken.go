@@ -38,7 +38,7 @@ func (rR *refreshTokenRepository) InsertRefreshToken(tCreate *dto.RefreshTokenCr
 		ExpirationTimeUnix: tCreate.ExpirationTimeUnix,
 		CreateTimeUnix:     tCreate.CreateTimeUnix,
 	}
-	result := rR.db.First(&refreshTokenF)
+	result := rR.db.Create(&refreshTokenF)
 	if result.Error != nil {
 		logF.Errorln(result.Error)
 		return nil, result.Error
@@ -53,10 +53,12 @@ func (rR *refreshTokenRepository) InsertRefreshToken(tCreate *dto.RefreshTokenCr
 	}, nil
 }
 
-func (rR *refreshTokenRepository) Find(refreshToken *scheme.RefreshToken) (*entity.RefreshToken, error) {
+func (rR *refreshTokenRepository) FindByToken(token string) (*entity.RefreshToken, error) {
 	logF := advancedlog.FunctionLog(rR.log)
 
-	result := rR.db.First(refreshToken)
+	var refreshToken *scheme.RefreshToken
+
+	result := rR.db.Where("token = ?", token).First(&refreshToken)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -77,8 +79,11 @@ func (rR *refreshTokenRepository) Find(refreshToken *scheme.RefreshToken) (*enti
 func (rR *refreshTokenRepository) DeleteByLogin(login string) error {
 	logF := advancedlog.FunctionLog(rR.log)
 
-	result := rR.db.Delete(&scheme.RefreshToken{Login: login})
+	result := rR.db.Where("login = ?", login).Delete(&scheme.RefreshToken{})
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil
+		}
 		logF.Errorln(result.Error)
 		return result.Error
 	}
@@ -89,7 +94,7 @@ func (rR *refreshTokenRepository) DeleteByLogin(login string) error {
 func (rR *refreshTokenRepository) DeleteByID(id uint) error {
 	logF := advancedlog.FunctionLog(rR.log)
 
-	result := rR.db.Delete(&scheme.RefreshToken{ID: id})
+	result := rR.db.Delete(&scheme.RefreshToken{}, id)
 	if result.Error != nil {
 		logF.Errorln(result.Error)
 		return result.Error
