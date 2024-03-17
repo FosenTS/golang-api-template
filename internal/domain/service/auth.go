@@ -10,13 +10,18 @@ import (
 	"golang-api-template/pkg/advancedlog"
 	"golang-api-template/pkg/ajwt"
 	"golang-api-template/pkg/passlib"
+	"golang-api-template/pkg/qrgen"
 
 	"github.com/sirupsen/logrus"
 )
 
 type Auth interface {
+	Policy(ctx context.Context, token string) (*safeobject.User, error)
+
 	Register(ctx context.Context, register *dto.UserCreate) error
 	Login(ctx context.Context, login *dto.Login) (*safeobject.PairToken, error)
+	Check(ctx context.Context, token string) (*safeobject.User, error)
+	Refresh(ctx context.Context, token string) (*safeobject.PairToken, error)
 }
 
 var ErrNotFound = errors.New("not found user")
@@ -40,6 +45,15 @@ func NewAuth(userStorage storage.User, refreshTokenStorage storage.RefreshToken,
 		jwtManager:          jwtManager,
 		log:                 log,
 	}
+}
+
+func (a *auth) CreateQRAuth() ([]byte, error) {
+	qr, err := qrgen.Encode("", qrgen.Medium, 256)
+	if err != nil {
+		return nil, err
+	}
+
+	return qr, nil
 }
 
 func (a *auth) createUserRefreshToken(ctx context.Context, login string) (*entity.RefreshToken, error) {
@@ -106,36 +120,85 @@ func (a *auth) Login(ctx context.Context, login *dto.Login) (*safeobject.PairTok
 	return pair, nil
 }
 
+func (a *auth) Check(ctx context.Context, token string) (*safeobject.User, error) {
+	logF := advancedlog.FunctionLog(a.log)
+
+	userClaims, err := a.jwtManager.ParseUser(token)
+	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
+
+	user, err := a.userStorage.FindByLogin(userClaims.Login)
+	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
+
+	return &safeobject.User{
+		Login:      user.Login,
+		Permission: user.Permission,
+	}, nil
+}
+
+func (a *auth) Policy(ctx context.Context, token string) (*safeobject.User, error) {
+	logF := advancedlog.FunctionLog(a.log)
+	userClaims, err := a.jwtManager.ParseUser(token)
+	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
+
+	user, err := a.userStorage.FindByLogin(userClaims.Login)
+	if err != nil {
+		logF.Errorln(err)
+		return nil, err
+	}
+
+	return &safeobject.User{
+		Login:      user.Login,
+		Permission: user.Permission,
+	}, nil
+}
+
 func (a *auth) Refresh(ctx context.Context, token string) (*safeobject.PairToken, error) {
+	logF := advancedlog.FunctionLog(a.log)
+
 	_, err := a.jwtManager.ParseRefreshToken(ctx, token)
 	if err != nil {
+		logF.Errorln(err)
 		return nil, err
 	}
 	rt, err := a.refreshTokenStorage.FindByToken(token)
 	if err != nil {
+		logF.Errorln(err)
 		return nil, err
 	}
 	if rt == nil {
+		logF.Errorln(ErrNotFound)
 		return nil, ErrNotFound
 	}
 
 	err = a.refreshTokenStorage.DeleteByID(rt.ID)
 	if err != nil {
+		logF.Errorln(err)
 		return nil, err
 	}
 
 	user, err := a.userStorage.FindByLogin(rt.Login)
-
 	if user == nil {
+		logF.Errorln(ErrNotFound)
 		return nil, ErrNotFound
 	}
 
 	accessToken, err := a.jwtManager.NewUser(rt.Login)
 	if err != nil {
+		logF.Errorln(err)
 		return nil, err
 	}
 	refreshToken, err := a.createUserRefreshToken(ctx, rt.Login)
 	if err != nil {
+		logF.Errorln(err)
 		return nil, err
 	}
 
@@ -158,8 +221,4 @@ func (a *auth) Register(ctx context.Context, register *dto.UserCreate) error {
 	}
 
 	return nil
-}
-
-func (a *auth) Check(ctx context.Context) {
-
 }

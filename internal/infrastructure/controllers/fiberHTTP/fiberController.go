@@ -1,7 +1,7 @@
 package fiberHTTP
 
 import (
-	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/handlers"
+	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,15 +11,27 @@ type FiberController interface {
 }
 
 type fiberController struct {
-	handlers *handlers.HandlerFiber
+	authHandler HandlerFiber
+	apiHanlder  HandlerFiber
+
+	middleware middleware.Middleware
 }
 
-func NewFiberController(handlers *handlers.HandlerFiber) FiberController {
-	return &fiberController{handlers: handlers}
+type HandlerFiber interface {
+	RegisterGroup(g fiber.Router)
+}
+
+func NewFiberController(authHandler HandlerFiber, middleware middleware.Middleware) FiberController {
+	return &fiberController{authHandler: authHandler, middleware: middleware}
 }
 
 func (fC *fiberController) RegisterRoutes(app *fiber.App) {
-	apiGroup := app.Group("/api")
 
-	fC.handlers.RegisterGroup(apiGroup)
+	policyChecker := fC.middleware.CreatePolicyFunc()
+
+	authGroup := app.Group("/auth")
+	apiGroup := app.Group("/api", policyChecker)
+
+	fC.authHandler.RegisterGroup(authGroup)
+	fC.apiHanlder.RegisterGroup(apiGroup)
 }
