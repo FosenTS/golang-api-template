@@ -53,7 +53,6 @@ import (
 	"image/color"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -379,7 +378,7 @@ func (q *QRCode) WriteFile(size int, filename string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filename, png, os.FileMode(0644))
+	return os.WriteFile(filename, png, os.FileMode(0644))
 }
 
 // encode completes the steps required to encode the QR Code. These include
