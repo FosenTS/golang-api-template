@@ -3,7 +3,9 @@ package product
 import (
 	"golang-api-template/internal/application/config"
 	"golang-api-template/internal/infrastructure/controllers/fiberHTTP"
-	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/handlers"
+	apihandler "golang-api-template/internal/infrastructure/controllers/fiberHTTP/handlers/apiHandler"
+	authhandler "golang-api-template/internal/infrastructure/controllers/fiberHTTP/handlers/authHandler"
+	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/middleware"
 	"golang-api-template/internal/infrastructure/controllers/metrics"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,8 +18,9 @@ type Controller struct {
 }
 
 func NewController(gateway *Gateway, metricsConfig config.MetricsConfig, log *logrus.Entry) *Controller {
+	middlew := middleware.NewMiddleware(gateway.Services.Auth, log.WithField("location", "middleware"))
 	return &Controller{
-		fiberController: fiberHTTP.NewFiberController(handlers.NewHandlerFiber(&gateway.Services.Auth, log.WithField("location", "handler-fiber"))),
+		fiberController: fiberHTTP.NewFiberController(authhandler.NewHandlerAuth(gateway.Services.Auth, log.WithField("location", "handler-auth")), apihandler.NewHandlerApi(log.WithField("location", "handler-api")), middlew),
 		metrics:         metrics.NewMetrics(metricsConfig, log.WithField("location", "metrics-listener")),
 	}
 }

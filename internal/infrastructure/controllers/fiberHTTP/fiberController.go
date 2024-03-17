@@ -21,8 +21,8 @@ type HandlerFiber interface {
 	RegisterGroup(g fiber.Router)
 }
 
-func NewFiberController(authHandler HandlerFiber, middleware middleware.Middleware) FiberController {
-	return &fiberController{authHandler: authHandler, middleware: middleware}
+func NewFiberController(authHandler, apiHandler HandlerFiber, middleware middleware.Middleware) FiberController {
+	return &fiberController{authHandler: authHandler, apiHanlder: apiHandler, middleware: middleware}
 }
 
 func (fC *fiberController) RegisterRoutes(app *fiber.App) {

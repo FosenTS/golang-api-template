@@ -13,9 +13,9 @@ type handlerAuth struct {
 	log *logrus.Entry
 }
 
-func NewHandlerAuth(authService *service.Auth, log *logrus.Entry) fiberHTTP.HandlerFiber {
+func NewHandlerAuth(authService service.Auth, log *logrus.Entry) fiberHTTP.HandlerFiber {
 	return &handlerAuth{
-		AuthService: *authService,
+		AuthService: authService,
 		log:         log,
 	}
 }

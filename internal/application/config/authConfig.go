@@ -29,8 +29,11 @@ func Auth() AuthConfig {
 		env := Env()
 		readConfig(path.Join(env.ConfigAbsPath, authCfgFilename), authConfigInst)
 
-		authConfigInst.JwtLiveTime = time.Duration(authConfigInst.jwtLiveTimeSeconds) * time.Second
+		// TODO: fix token expires time
+		authConfigInst.JwtLiveTime = time.Second * time.Duration(authConfigInst.jwtLiveTimeSeconds)
+		authConfigInst.JwtLiveTime = 1800 * time.Second
 		authConfigInst.RefreshLiveTime = time.Duration(authConfigInst.refreshLiveTimeSeconds) * time.Second
+		authConfigInst.RefreshLiveTime = 40323402 * time.Second
 	})
 
 	return *authConfigInst

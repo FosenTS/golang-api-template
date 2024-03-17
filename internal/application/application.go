@@ -6,10 +6,14 @@ import (
 	"golang-api-template/internal/application/config"
 	"golang-api-template/internal/application/product"
 	"golang-api-template/pkg/advancedlog"
+	"os"
+	"time"
 
 	"github.com/alitto/pond"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/weaveworks/promrus"
 
 	"github.com/sirupsen/logrus"
@@ -100,11 +104,22 @@ func (app *app) runHTTP(ctx context.Context) error {
 		fApp.Use(cache.New())
 	}
 
+	fApp.Use(logger.New(
+		logger.Config{
+			Next:          nil,
+			Done:          nil,
+			Format:        "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path} | ${error}\n",
+			TimeFormat:    "15:04:05",
+			TimeZone:      "Local",
+			TimeInterval:  500 * time.Millisecond,
+			Output:        os.Stdout,
+			DisableColors: false,
+		},
+	))
+
 	app.endpoint.ConfigureFiber(fApp)
 
-	fApp.Get("/test", func(c *fiber.Ctx) error {
-		return c.SendString("test")
-	})
+	fApp.Get("/metrics", monitor.New())
 
 	addr := fmt.Sprintf("%s:%s", app.httpCfg.Host, app.httpCfg.Port)
 
