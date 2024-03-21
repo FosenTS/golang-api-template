@@ -3,19 +3,23 @@ package authhandler
 import (
 	"golang-api-template/internal/domain/service"
 	"golang-api-template/internal/infrastructure/controllers/fiberHTTP"
+	"golang-api-template/internal/infrastructure/controllers/fiberHTTP/middleware"
 
 	"github.com/sirupsen/logrus"
 )
 
 type handlerAuth struct {
-	AuthService service.Auth
+	authService service.Auth
+
+	middleware middleware.Middleware
 
 	log *logrus.Entry
 }
 
-func NewHandlerAuth(authService service.Auth, log *logrus.Entry) fiberHTTP.HandlerFiber {
+func NewHandlerAuth(authService service.Auth, middleware middleware.Middleware, log *logrus.Entry) fiberHTTP.HandlerFiber {
 	return &handlerAuth{
-		AuthService: authService,
+		authService: authService,
+		middleware:  middleware,
 		log:         log,
 	}
 }

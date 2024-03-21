@@ -1,10 +1,10 @@
 package safeobject
 
-type User struct {
+type Policy struct {
 	Login      string `json:"login"`
 	Permission uint   `json:"permission"`
 }
 
-func NewUser(login string, permission uint) *User {
-	return &User{Login: login, Permission: permission}
+func NewUser(login string, permission uint) *Policy {
+	return &Policy{Login: login, Permission: permission}
 }

@@ -1,17 +1,66 @@
 package authhandler
 
 import (
+	"errors"
+	"fmt"
 	"golang-api-template/internal/domain/storage/dto"
 	"golang-api-template/pkg/advancedlog"
 
 	"github.com/gofiber/fiber/v2"
 )
 
+var invalidAccessToken = errors.New("invalid access token")
+
 func (h *handlerAuth) RegisterGroup(g fiber.Router) {
+
+	policyChecker := h.middleware.CreatePolicyFunc()
+
 	g.Post("/login", h.Login)
 	g.Post("/register", h.Register)
 	g.Get("/check", h.Check)
 	g.Post("/refresh", h.Refresh)
+
+	g.Post("/fastLoginCreate", policyChecker, h.FastLoginCreate)
+	g.Post("/fastLogin", h.FastLogin)
+}
+
+func (h *handlerAuth) FastLogin(ctx *fiber.Ctx) error {
+	logF := advancedlog.FunctionLog(h.log)
+
+	token := ctx.Query("a")
+	fmt.Println(token)
+	if token == "" {
+		logF.Errorln(invalidAccessToken)
+		return ctx.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	pair, err := h.authService.FastLogin(ctx.Context(), token)
+	if err != nil {
+		logF.Errorln(err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(pair)
+
+}
+
+func (h *handlerAuth) FastLoginCreate(ctx *fiber.Ctx) error {
+	logF := advancedlog.FunctionLog(h.log)
+
+	policy, err := h.middleware.GetPolicy(ctx)
+	if err != nil {
+		logF.Errorln(err)
+		return ctx.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	qr, err := h.authService.CreateFastLogin(ctx.Context(), policy)
+	if err != nil {
+		logF.Errorln(err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	ctx.Set("Content-Type", "image/png")
+	return ctx.Status(fiber.StatusOK).Send(qr)
 }
 
 func (h *handlerAuth) Login(ctx *fiber.Ctx) error {
@@ -23,7 +72,7 @@ func (h *handlerAuth) Login(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).SendString("invalid login format")
 	}
 
-	tokens, err := h.AuthService.Login(ctx.Context(), login)
+	tokens, err := h.authService.Login(ctx.Context(), login)
 	if err != nil {
 		logF.Errorln(err)
 		return ctx.SendStatus(fiber.StatusUnauthorized)
@@ -37,7 +86,7 @@ func (h *handlerAuth) Refresh(ctx *fiber.Ctx) error {
 
 	token := ctx.Query("refresh")
 
-	pairTokens, err := h.AuthService.Refresh(ctx.Context(), token)
+	pairTokens, err := h.authService.Refresh(ctx.Context(), token)
 	if err != nil {
 		logF.Errorln(err)
 		return ctx.SendStatus(fiber.StatusUnauthorized)
@@ -50,7 +99,7 @@ func (h *handlerAuth) Check(ctx *fiber.Ctx) error {
 	logF := advancedlog.FunctionLog(h.log)
 	token := ctx.Get("Authorization")
 
-	user, err := h.AuthService.Check(ctx.Context(), token)
+	user, err := h.authService.Check(ctx.Context(), token)
 	if err != nil {
 		logF.Errorln(err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
@@ -68,7 +117,7 @@ func (h *handlerAuth) Register(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).SendString("invalid register format")
 	}
 
-	err := h.AuthService.Register(ctx.Context(), register)
+	err := h.authService.Register(ctx.Context(), register)
 	if err != nil {
 		logF.Errorln(err)
 		return ctx.Status(fiber.StatusInternalServerError).SendString("user not created")

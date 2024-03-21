@@ -17,6 +17,12 @@ type AuthConfig struct {
 
 	JwtLiveTime     time.Duration
 	RefreshLiveTime time.Duration
+
+	FastAuth struct {
+		Scheme string `yaml:"scheme" env-required:"true"`
+		Url    string `yaml:"url" env-required:"true"`
+		Path   string `yaml:"path" env-required:"true"`
+	} `yaml:"fastAuth" env-required:"true"`
 }
 
 var (
@@ -31,9 +37,12 @@ func Auth() AuthConfig {
 
 		// TODO: fix token expires time
 		authConfigInst.JwtLiveTime = time.Second * time.Duration(authConfigInst.jwtLiveTimeSeconds)
-		authConfigInst.JwtLiveTime = 1800 * time.Second
+
+		authConfigInst.JwtLiveTime = time.Second * 10000
+
 		authConfigInst.RefreshLiveTime = time.Duration(authConfigInst.refreshLiveTimeSeconds) * time.Second
-		authConfigInst.RefreshLiveTime = 40323402 * time.Second
+
+		authConfigInst.RefreshLiveTime = time.Hour * 100
 	})
 
 	return *authConfigInst

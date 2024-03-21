@@ -21,7 +21,7 @@ func NewServices(
 	hashManager := passlib.NewHashManager(authConfig.Salt)
 	jwtManager := ajwt.NewJWTManager(hashManager, authConfig.SecretJWTKey, authConfig.JwtLiveTime, authConfig.RefreshLiveTime)
 
-	authService := service.NewAuth(storage.User, storage.RefreshTokens, hashManager, jwtManager, log.WithField("location", "auth-service"))
+	authService := service.NewAuth(storage.User, storage.RefreshTokens, hashManager, jwtManager, authConfig, log.WithField("location", "auth-service"))
 	return &Services{
 		Auth: authService,
 	}
